@@ -93,9 +93,6 @@ const loginUser = asyncHandler(async (req, res) => {
    //return response=> successfully login 
 
    const {email, username, password} = req.body
-   console.log("email:", email)
-   console.log("username:", username)
-   console.log("password:", password)
    if(!email && !username){
       throw new ApiError(400, "Email or username is required")
    }
@@ -159,7 +156,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 const refreshAccessToken = asyncHandler(async (req,res)=>{
    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
-   if( incomingRefreshToken){
+   if( !incomingRefreshToken){
       throw new ApiError(401, "unauthorized request")
    }
 
@@ -189,7 +186,6 @@ const refreshAccessToken = asyncHandler(async (req,res)=>{
     
   } catch (error) {
     throw new ApiError(401, error?.message || "Invalid refresh token")
-   
   }
 })
 export {registerUser, loginUser, logoutUser, refreshAccessToken}
