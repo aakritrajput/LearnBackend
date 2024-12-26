@@ -1,6 +1,7 @@
 import {Router} from "express";
-import {registerUser} from "../controllers/user.controller.js"
+import {loginUser, logoutUser, registerUser, refreshAccessToken} from "../controllers/user.controller.js"
 import { upload } from "../middlewares/multer.middleware.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 router.route("/register").post(
@@ -10,5 +11,10 @@ router.route("/register").post(
     ]),
     registerUser
 ) //methods to be written
-// hi i am very much excited for the development of the cloud engineering and i am not very much excited for the new thing that i a going to learn about
+
+router.route("/login").post(loginUser)
+
+// secured routes
+router.route("/logout").post(verifyJWT, logoutUser)
+router.route("/refresh-token").post(refreshAccessToken)
 export default router 
