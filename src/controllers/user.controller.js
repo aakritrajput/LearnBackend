@@ -165,13 +165,18 @@ const refreshAccessToken = asyncHandler(async (req,res)=>{
        incomingRefreshToken,
        process.env.REFRESH_TOKEN_SECRET
     )
+
+    console.log(decodedToken)
     
-    const user = User.findById(decodedToken?._id)
+    const user = await User.findById(decodedToken._id)
+
+    console.log("user:", user)
+    console.log("user refresh token :", user.refreshToken, "incoming refresh token:", incomingRefreshToken)
     if(!user){
        throw new ApiError(401, "Invalid refresh token")
     }
  
-    if(incomingRefreshToken !== user?.refreshToken){
+    if(incomingRefreshToken !== user.refreshToken){
        throw new ApiError(401, "refresh token is expired or used")
     }
  
@@ -399,7 +404,7 @@ const getWatchHistory = asyncHandler(async(req, res)=> {
                   }
                },
                {
-                  $addFields{
+                  $addFields:{
                      owner: {
                         $first: "$owner"
                      }
@@ -410,7 +415,7 @@ const getWatchHistory = asyncHandler(async(req, res)=> {
       }
    ])
    return res
-   .status(200),
+   .status(200)
    .json(
       new ApiResponse(
          200,
