@@ -218,11 +218,12 @@ const getcurrentUser = asyncHandler(async(req, res)=>{
 
 const updateAccountDetails = asyncHandler(async(req, res)=>{
    const {fullName, email} = req.body
+   //console.log(`fullname ${fullName}, and email is ${email}`)
    if(!fullName && !email){
       throw new ApiError(400, "All fields are required")
    }
 
-   const user = User.findByIdAndUpdate(
+   const user = await User.findByIdAndUpdate(
       req.user?._id,
       {
          $set: {
@@ -234,6 +235,8 @@ const updateAccountDetails = asyncHandler(async(req, res)=>{
          new:true    // by this parameter the info after update is returned 
       }
    ).select("-password ")
+
+   //console.log(user)
 
    res
    .status(200)
