@@ -21,6 +21,7 @@ const uploadOnCloudinary = async (localFilePath) => {
         return response;
     } catch (error) {
         fs.unlinkSync(localFilePath); // taaki local file delete ho jaye agar error aata hai aur faltu ka space na le 
+        console.log(` error uploading on cloudenary ${error}`)
         return null;
     }
 };
