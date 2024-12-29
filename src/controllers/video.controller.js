@@ -1,6 +1,6 @@
-//import mongoose, {isValidObjectId} from "mongoose"
+import mongoose, {isValidObjectId} from "mongoose"
 import {Video} from "../models/video.model.js"
-//import {User} from "../models/user.model.js"
+import {User} from "../models/user.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
@@ -14,16 +14,26 @@ const getAllVideos = asyncHandler(async (req, res) => {
             page: parseInt(page, 10),
             limit: parseInt(limit, 10),
         };
-        const matchQuery = JSON.parse(query);
-        console.log(matchQuery)
+        let matchQuery; 
+        try { 
+            matchQuery = JSON.parse(query); 
+            //console.log(matchQuery); 
+            if (matchQuery._id) {
+                matchQuery._id = new mongoose.Types.ObjectId(matchQuery._id);
+                console.log(matchQuery._id)
+            }
+        } catch (jsonError) { 
+            throw new ApiError(400, "Invalid JSON format for query parameter"); 
+        }
+
         const sort = {
             [sortBy] : sortType === 'asc' ? 1 : -1 
         }
     
-        const aggregate = await Video.aggregate([
+        const aggregate = Video.aggregate([
             {
-                $match: matchQuery
-            },
+                $match: matchQuery,
+            }, 
             {
                 $lookup : {
                     from: 'users',
@@ -32,12 +42,13 @@ const getAllVideos = asyncHandler(async (req, res) => {
                     as: 'owner',
                     pipeline: [
                         {
-                        $project: {
-                            fullName: 1,
-                            username: 1,
-                            avatar: 1,
-                            _id: 0
-                        }}
+                            $project: {
+                                fullName: 1,
+                                username: 1,
+                                avatar: 1,
+                                _id: 1
+                            }
+                        }
                     ]
                 }
             },
@@ -46,11 +57,8 @@ const getAllVideos = asyncHandler(async (req, res) => {
             }
             
         ]);
-    
-        if(!aggregate.length){
-            console.log(aggregate.length)
-            throw new ApiError(404, " no videos found")
-        }
+
+        console.log(aggregate)
     
         const videos = await Video.aggregatePaginate(aggregate, options)
 
@@ -63,8 +71,9 @@ const getAllVideos = asyncHandler(async (req, res) => {
         }
     
         return res.status(201).json(new ApiResponse(201, result , "Video's fetched successfully"))
-    } catch (error) {
-        throw new ApiError(401, error?.message || "Unable to get the videos")
+    }catch (error) {
+        console.error(error.stack);
+        throw new ApiError(error.statusCode || 500, error.message || "Unable to get the videos");
     }
 
 })
@@ -96,14 +105,15 @@ const publishVideo = asyncHandler(async (req, res) => {
         throw new ApiError(500, " unable to upload thumbnail on cloudenary")
     }
 
-
+    console.log(req.user._id)
     const video = await Video.create({
         title,
         description,
         videoFile: videoOnCloud.url,
         thumbnail: thumbnailOnCloud.url,
         duration: videoOnCloud.duration,
-        isPublished: true
+        isPublished: true,
+        owner: new mongoose.Types.ObjectId(req.user?._id)
     })
 
     if(!video){
