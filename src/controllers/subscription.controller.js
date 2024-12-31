@@ -17,6 +17,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
         })
     
         if(toggle.length){
+            console.log("subscription found")
             await Subscription.findByIdAndDelete(toggle[0]._id)
             console.log(`channel with channelId ${channelId} unsubscribed!!`)
     
@@ -26,6 +27,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
     
             res.status(200).json(new ApiResponse(200, result , `channel with channelId ${channelId} unsubscribed!!` ))
         }else{
+            console.log("subscription not found")
             await Subscription.create({
                 subscriber : user,
                 channel : channelId
@@ -39,7 +41,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
             res.status(200).json(new ApiResponse(200, result , `channel with channelId ${channelId} subscribed!!` ))
         }
     } catch (error) {
-        throw new ApiError(500, "error toggling channel subscription")
+        throw new ApiError(500, error.message || "error toggling channel subscription")
     }
     
     // TODO: toggle subscription
